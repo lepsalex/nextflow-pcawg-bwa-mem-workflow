@@ -1,0 +1,11 @@
+{
+  "unalignedBams": ["/home/alepsa/Release/broadinstitute/cromwell/wdl-pcawg-bwa-mem-workflow/hg19.chr22.5x.normal.bam", "/home/alepsa/Release/broadinstitute/cromwell/wdl-pcawg-bwa-mem-workflow/hg19.chr22.5x.normal.bam"],
+  "outputFilePrefix": "processed",
+  "reference_gz": "/home/alepsa/Release/broadinstitute/cromwell/wdl-pcawg-bwa-mem-workflow/genome.fa.gz",
+  "reference_gz_fai": "/home/alepsa/Release/broadinstitute/cromwell/wdl-pcawg-bwa-mem-workflow/genome.fa.gz.fai",
+  "reference_gz_amb": "/home/alepsa/Release/broadinstitute/cromwell/wdl-pcawg-bwa-mem-workflow/genome.fa.gz.64.amb",
+  "reference_gz_ann": "/home/alepsa/Release/broadinstitute/cromwell/wdl-pcawg-bwa-mem-workflow/genome.fa.gz.64.ann",
+  "reference_gz_bwt": "/home/alepsa/Release/broadinstitute/cromwell/wdl-pcawg-bwa-mem-workflow/genome.fa.gz.64.bwt",
+  "reference_gz_pac": "/home/alepsa/Release/broadinstitute/cromwell/wdl-pcawg-bwa-mem-workflow/genome.fa.gz.64.pac",
+  "reference_gz_sa": "/home/alepsa/Release/broadinstitute/cromwell/wdl-pcawg-bwa-mem-workflow/genome.fa.gz.64.sa"
+}
