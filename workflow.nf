@@ -25,9 +25,8 @@ process readHeader {
     file(bam) from bams_rh
 
     output:
-    set file(bam), val("${bam.getBaseName()}"), file("${bam.getBaseName()}_header.txt") into headers
+    set val("${bam.getBaseName()}"), file(bam), file("${bam.getBaseName()}_header.txt") into headers
 
-    script:
     """
     samtools view -H ${bam} | \
     perl -nae 'next unless /^\\@RG/; s/\\tPI:\\t/\\t/; s/\\tPI:\\s*\\t/\\t/; s/\\tPI:\\s*\\z/\\n/; s/\\t/\\\t/g; print' > \
@@ -44,26 +43,43 @@ process countReads {
     output:
     set val("${bam.getBaseName()}"), file("${bam.getBaseName()}_read_count.txt") into counts
 
-    script:
     """
     samtools view ${bam} | \
     wc -l > "${bam.getBaseName()}_read_count.txt"
     """
 }
 
+// Join headers with counts
+headers_with_counts = headers.join(counts)
+
 process align {
     container "quay.io/pancancer/pcawg-bwa-mem"
 
     input:
-    set file(bam), val(bamName), file(bamHeader) from headers
+    set val(bamName), file(bam), file(bamHeader), file(readCount) from headers_with_counts
 
     output:
-    file "${bamName}_aligned.bam" into aligned_bams
+    set val(bamName), file("${bamName}_aligned.bam"), file(bamHeader), file(readCount) into aligned_bams
 
-    script:
     """
-    bamtofastq exlcude=QCFAIL,SECONDARY,SUPPLEMENTARY T=${bamName + ".t"} S=${bamName + ".s"} O=${bamName + ".o"} O2=${bamName + ".o2"} collate=1 tryoq=1 filename=${bam} | \
+    bamtofastq exlcude=QCFAIL,SECONDARY,SUPPLEMENTARY T=${bamName}.t S=${bamName}.s O=${bamName}.o O2=${bamName}.o2 collate=1 tryoq=1 filename=${bam} | \
     bwa mem -p -t ${params.threads} -T 0 -R "${bamHeader}" ${reference_gz} - | \
-    bamsort blockmb=${params.sortMemMb} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=${reference_gz} tmpfile=${bamName + ".sorttmp"} O=${bamName + "_aligned.bam"}
+    bamsort blockmb=${params.sortMemMb} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=${reference_gz} tmpfile=${bamName}.sorttmp O=${bamName}_aligned.bam
+    """
+}
+
+process bam_stats_qc {
+    container "quay.io/pancancer/pcawg-bwa-mem"
+
+    publishDir "bas_out"
+
+    input:
+    set val(bamName), file(bam), file(bamHeader), file(readCount) from aligned_bams
+
+    output:
+    file "${bamName}.bas" into bam_stats
+
+    """
+    bam_stats -i ${bam} -o ${bamName}.bas
     """
 }
