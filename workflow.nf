@@ -76,15 +76,50 @@ process align {
 process bam_stats_qc {
     container "quay.io/pancancer/pcawg-bwa-mem"
 
+    // MAYBE: https://www.nextflow.io/docs/latest/process.html#publishdir
+
     input:
     set val(bamName), file(bam), file(bamHeader), file(readCount) from aligned_bams
 
     output:
     file "${bamName}.bas" into bam_stats
+    file bam into verified_bams
 
     """
     bam_stats -i ${bam} -o ${bamName}.bas \
     && \
     verify_read_groups.pl --header-file ${bamHeader} --bas-file ${bamName + ".bas"} --input-read-count-file ${readCount}
+    """
+}
+
+// Collect all verified bams to a single list (to be joined in merge process)
+// POSSIBLE PROBLEM is that this saves the current path which is a symlink
+all_verified_bams = verified_bams.collect { "I=${it}" }
+
+process merge {
+    container "quay.io/pancancer/pcawg-bwa-mem"
+
+    input:
+    // ??? Can we collect here ???
+    val all_verified_bams
+
+    output:
+    file "${params.outputFilePrefix}.bam"
+    file "${outputFilePrefix}.bam.bai"
+    file "${params.outputFilePrefix}.metrics"
+
+
+    script:
+    """
+    bammarkduplicates \
+    ${all_verified_bams.join(" ")} \
+    O=${params.outputFilePrefix}.bam \
+    M=${params.outputFilePrefix}.metrics \
+    tmpfile=${params.outputFilePrefix}.biormdup \
+    markthreads=${params.threads} \
+    rewritebam=1 \
+    rewritebamlevel=1 \
+    index=1 \
+    md5=1
     """
 }
