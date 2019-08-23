@@ -1,7 +1,7 @@
 {
-    "outputFilePrefix": "aligned_",
-    "threads": 1,
-    "sortMemMb": 512,
+    "outputFilePrefix": "processed_",
+    "threads": 2,
+    "sortMemMb": 1024,
     "reference_gz": "reference/genome.fa.gz",
     "reference_gz_fai": "reference/genome.fa.gz.fai",
     "reference_gz_amb": "reference/genome.fa.gz.64.amb",
