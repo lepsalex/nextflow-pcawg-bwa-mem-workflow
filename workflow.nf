@@ -18,7 +18,6 @@ Channel.fromPath(params.reference_gz_sa).set { reference_gz_sa_ch }
 
 
 process readHeader {
-    container "quay.io/pancancer/pcawg-bwa-mem"
 
     input:
     file bam from bams_rh
@@ -34,7 +33,6 @@ process readHeader {
 }
 
 process countReads {
-    container "quay.io/pancancer/pcawg-bwa-mem"
 
     input:
     file bam from bams_cr
@@ -49,10 +47,9 @@ process countReads {
 }
 
 process align {
-    container "quay.io/pancancer/pcawg-bwa-mem"
 
     input:
-    val reference_gz from reference_gz_align
+    file reference_gz from reference_gz_align
     // Map headers to extract header text then join with counts
     set val(bamName), file(bam), file(bamHeader), val(headerText), file(readCount) from headers.map {
         [it[0], it[1], it[2], file(it[2]).text]
@@ -63,13 +60,12 @@ process align {
 
     """
     bamtofastq exlcude=QCFAIL,SECONDARY,SUPPLEMENTARY T=${bamName}.t S=${bamName}.s O=${bamName}.o O2=${bamName}.o2 collate=1 tryoq=1 filename=${bam} | \\
-    bwa mem -p -t ${params.threads} -T 0 -R "${headerText.trim()}" $reference_gz - | \\
-    bamsort blockmb=${params.sortMemMb} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=$reference_gz tmpfile=${bamName}.sorttmp O=${bamName}_aligned.bam
+    bwa mem -p -t ${params.threads} -T 0 -R "${headerText.trim()}" ${reference_gz} - | \\
+    bamsort blockmb=${params.sortMemMb} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=${reference_gz} tmpfile=${bamName}.sorttmp O=${bamName}_aligned.bam
     """
 }
 
 process bam_stats_qc {
-    container "quay.io/pancancer/pcawg-bwa-mem"
 
     input:
     set val(bamName), file(bam), file(bamHeader), file(readCount) from aligned_bams
@@ -86,7 +82,6 @@ process bam_stats_qc {
 }
 
 process merge {
-    container "quay.io/pancancer/pcawg-bwa-mem"
 
     input:
     // Collecting in channel, good thread on exactly this use-case:
@@ -112,10 +107,9 @@ process merge {
 }
 
 process extract_unaligned_reads {
-    container "quay.io/pancancer/pcawg-bwa-mem"
 
     input:
-    val reference_gz from reference_gz_reads
+    file reference_gz from reference_gz_reads
     // combine into two channels to be processed with different f values
     set file(merged_bam), val(f) from merged_bams.combine(Channel.from(4, 8))
 
@@ -126,6 +120,6 @@ process extract_unaligned_reads {
     """
     samtools view -h -f ${f} ${merged_bam} | \\
     remove_both_ends_unmapped_reads.pl | \\
-    bamsort blockmb=${params.sortMemMb} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=$reference_gz tmpfile=${params.outputFilePrefix}.sorttmp O=${params.outputFilePrefix}_unmappedReads_f${f}.bam
+    bamsort blockmb=${params.sortMemMb} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=${reference_gz} tmpfile=${params.outputFilePrefix}.sorttmp O=${params.outputFilePrefix}_unmappedReads_f${f}.bam
     """
 }
