@@ -1,16 +1,22 @@
 #!/usr/bin/env nextflow
 
 // Script parameter defaults
-params.outputDir = "out"
-params.outputFilePrefix = "processed"
+params.outputDir = "./out"
+params.outputFilePrefix = "example"
+params.inputDir = "./input"
 params.threads = 1
 params.sortMemMb = 1024
 
-// Inputs (TODO: should check for vals first via ifEmpty() - see nf-core examples)
-Channel.fromPath('input/*.bam').into { bams_rh; bams_cr }
+// Inputs
+// TODO: should check for existence first via ifEmpty() - see any nf-core examples
+Channel.fromPath("${params.inputDir}/*.bam").into { bams_rh; bams_cr }
 
+// Nextflow docs are a little conflicting, they say that a single file channel can
+// be reused multiple times but when trying to do it results in an error so for now
+// going to explicitly split into channels to be consumed once only
 Channel.fromPath(params.reference_gz).into { reference_gz_align_ch; reference_gz_extract_ch }
 Channel.fromPath(params.reference_gz_fai).into { reference_gz_fai_align_ch; reference_gz_fai_extract_ch }
+
 Channel.fromPath(params.reference_gz_amb).set { reference_gz_amb_ch }
 Channel.fromPath(params.reference_gz_ann).set { reference_gz_ann_ch }
 Channel.fromPath(params.reference_gz_bwt).set { reference_gz_bwt_ch }
@@ -51,6 +57,8 @@ process align {
 
     input:
     file reference_gz from reference_gz_align_ch
+    // While not explicitly used, files are implicitly used by
+    // convention in bwa mem (ie. explicit file_name.fa.gz => file_name.fa.gz.fai) 
     file reference_gz_fai from reference_gz_fai_align_ch
     file reference_gz_amb from reference_gz_amb_ch
     file reference_gz_ann from reference_gz_ann_ch
@@ -66,7 +74,7 @@ process align {
     set val(bamName), file("${bamName}_aligned.bam"), file(bamHeader), file(readCount) into aligned_bams
 
     """
-    bamtofastq exlcude=QCFAIL,SECONDARY,SUPPLEMENTARY T=${bamName}.t S=${bamName}.s O=${bamName}.o O2=${bamName}.o2 collate=1 tryoq=1 filename=${bam} | \\
+    bamtofastq exclude=QCFAIL,SECONDARY,SUPPLEMENTARY T=${bamName}.t S=${bamName}.s O=${bamName}.o O2=${bamName}.o2 collate=1 tryoq=1 filename=${bam} | \\
     bwa mem -p -t ${params.threads} -T 0 -R "${headerText.trim()}" ${reference_gz} - | \\
     bamsort blockmb=${params.sortMemMb} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=${reference_gz} tmpfile=${bamName}.sorttmp O=${bamName}_aligned.bam
     """

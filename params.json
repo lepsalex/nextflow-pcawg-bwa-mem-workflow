@@ -1,6 +1,7 @@
 {
     "outputDir": "out",
-    "outputFilePrefix": "processed",
+    "outputFilePrefix": "hg19.chr22.5.5x",
+    "inputDir": "input",
     "threads": 4,
     "sortMemMb": 2048,
     "reference_gz": "./reference/genome.fa.gz",
