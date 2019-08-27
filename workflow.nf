@@ -8,20 +8,23 @@ params.threads = 1
 params.sortMemMb = 1024
 
 // Inputs
-// TODO: should check for existence first via ifEmpty() - see any nf-core examples
+
+// TODO: should check for existence first via ifEmpty() - see any nf-core example
+// ----- Also applicable to the file() syntax below - checkIfExists: true
+// ----- https://github.com/nf-core/chipseq/blob/master/main.nf
 Channel.fromPath("${params.inputDir}/*.bam").into { bams_rh; bams_cr }
 
 // Nextflow docs are a little conflicting, they say that a single file channel can
 // be reused multiple times but when trying to do it results in an error so for now
-// going to explicitly split into channels to be consumed once only
-Channel.fromPath(params.reference_gz).into { reference_gz_align_ch; reference_gz_extract_ch }
-Channel.fromPath(params.reference_gz_fai).into { reference_gz_fai_align_ch; reference_gz_fai_extract_ch }
-
-Channel.fromPath(params.reference_gz_amb).set { reference_gz_amb_ch }
-Channel.fromPath(params.reference_gz_ann).set { reference_gz_ann_ch }
-Channel.fromPath(params.reference_gz_bwt).set { reference_gz_bwt_ch }
-Channel.fromPath(params.reference_gz_pac).set { reference_gz_pac_ch }
-Channel.fromPath(params.reference_gz_sa).set { reference_gz_sa_ch }
+// going to use direct file declaration like this, based on example on nextflow.oi:
+// https://www.nextflow.io/example4.html
+reference_gz_ch = file(params.reference_gz)
+reference_gz_fai_ch = file(params.reference_gz_fai)
+reference_gz_amb_ch = file(params.reference_gz_amb)
+reference_gz_ann_ch = file(params.reference_gz_ann)
+reference_gz_bwt_ch = file(params.reference_gz_bwt)
+reference_gz_pac_ch = file(params.reference_gz_pac)
+reference_gz_sa_ch = file(params.reference_gz_sa)
 
 
 process readHeader {
@@ -56,10 +59,10 @@ process countReads {
 process align {
 
     input:
-    file reference_gz from reference_gz_align_ch
+    file reference_gz from reference_gz_ch
     // While not explicitly used, files are implicitly used by
     // convention in bwa mem (ie. explicit file_name.fa.gz => file_name.fa.gz.fai) 
-    file reference_gz_fai from reference_gz_fai_align_ch
+    file reference_gz_fai from reference_gz_fai_ch
     file reference_gz_amb from reference_gz_amb_ch
     file reference_gz_ann from reference_gz_ann_ch
     file reference_gz_bwt from reference_gz_bwt_ch
@@ -128,8 +131,8 @@ process extract_unaligned_reads {
     extract_flags = [4, 8]
 
     input:
-    file reference_gz from reference_gz_extract_ch
-    file reference_gz_fai from reference_gz_fai_extract_ch
+    file reference_gz from reference_gz_ch
+    file reference_gz_fai from reference_gz_fai_ch
     file merged_bam from mb_for_extract_ur
     each f from extract_flags
 
