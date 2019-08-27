@@ -1,6 +1,7 @@
 #!/usr/bin/env nextflow
 
-// Script parameters
+// Script parameter defaults
+params.outputDir = "out"
 params.outputFilePrefix = "processed"
 params.threads = 1
 params.sortMemMb = 1024
@@ -8,8 +9,8 @@ params.sortMemMb = 1024
 // Inputs (TODO: should check for vals first via ifEmpty() - see nf-core examples)
 Channel.fromPath('input/*.bam').into { bams_rh; bams_cr }
 
-Channel.fromPath(params.reference_gz).into { reference_gz_align; reference_gz_reads }
-Channel.fromPath(params.reference_gz_fai).set { reference_gz_fai_ch }
+Channel.fromPath(params.reference_gz).into { reference_gz_align_ch; reference_gz_extract_ch }
+Channel.fromPath(params.reference_gz_fai).into { reference_gz_fai_align_ch; reference_gz_fai_extract_ch }
 Channel.fromPath(params.reference_gz_amb).set { reference_gz_amb_ch }
 Channel.fromPath(params.reference_gz_ann).set { reference_gz_ann_ch }
 Channel.fromPath(params.reference_gz_bwt).set { reference_gz_bwt_ch }
@@ -49,7 +50,13 @@ process countReads {
 process align {
 
     input:
-    file reference_gz from reference_gz_align
+    file reference_gz from reference_gz_align_ch
+    file reference_gz_fai from reference_gz_fai_align_ch
+    file reference_gz_amb from reference_gz_amb_ch
+    file reference_gz_ann from reference_gz_ann_ch
+    file reference_gz_bwt from reference_gz_bwt_ch
+    file reference_gz_pac from reference_gz_pac_ch
+    file reference_gz_sa from reference_gz_sa_ch
     // Map headers to extract header text then join with counts
     set val(bamName), file(bam), file(bamHeader), val(headerText), file(readCount) from headers.map {
         [it[0], it[1], it[2], file(it[2]).text]
@@ -81,7 +88,9 @@ process bam_stats_qc {
     """
 }
 
-process merge {
+process merge_aligned {
+
+    publishDir "${params.outputDir}", mode: 'copy', overwrite: true
 
     input:
     // Collecting in channel, good thread on exactly this use-case:
@@ -89,15 +98,15 @@ process merge {
     file("verified_bam_") from verified_bams.collect()
 
     output:
-    file "${params.outputFilePrefix}.bam" into merged_bams
-    file "${params.outputFilePrefix}.metrics" into merged_bam_metrics   
+    file "${params.outputFilePrefix}_aligned.bam" into mb_for_extract_ur, mb_for_extract_bru
+    file "${params.outputFilePrefix}_aligned.metrics" into merged_bam_metrics   
 
     """
     bammarkduplicates \
     I=${verified_bam_.join(" I=")} \
-    O=${params.outputFilePrefix}.bam \
-    M=${params.outputFilePrefix}.metrics \
-    tmpfile=${params.outputFilePrefix}.biormdup \
+    O=${params.outputFilePrefix}_aligned.bam \
+    M=${params.outputFilePrefix}_aligned.metrics \
+    tmpfile=${params.outputFilePrefix}_aligned.biormdup \
     markthreads=${params.threads} \
     rewritebam=1 \
     rewritebamlevel=1 \
@@ -107,19 +116,62 @@ process merge {
 }
 
 process extract_unaligned_reads {
+    // will create one file for each f value
+    extract_flags = [4, 8]
 
     input:
-    file reference_gz from reference_gz_reads
-    // combine into two channels to be processed with different f values
-    set file(merged_bam), val(f) from merged_bams.combine(Channel.from(4, 8))
+    file reference_gz from reference_gz_extract_ch
+    file reference_gz_fai from reference_gz_fai_extract_ch
+    file merged_bam from mb_for_extract_ur
+    each f from extract_flags
 
     output:
-    file "${params.outputFilePrefix}_unmappedReads_f${f}.bam" into unmapped
+    file "${params.outputFilePrefix}_unmappedReads_f${f}.bam" into extract_ur_unmapped
 
     // samtools: -f option = Only output alignments with all bits set in INT present in the FLAG field.
     """
     samtools view -h -f ${f} ${merged_bam} | \\
     remove_both_ends_unmapped_reads.pl | \\
     bamsort blockmb=${params.sortMemMb} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=${reference_gz} tmpfile=${params.outputFilePrefix}.sorttmp O=${params.outputFilePrefix}_unmappedReads_f${f}.bam
+    """
+}
+
+process extract_both_reads_unaligned {
+
+    input:
+    file merged_bam from mb_for_extract_bru
+
+    output:
+    file "${params.outputFilePrefix}_unmappedReads_f12.bam" into extract_bru_unmapped
+
+    """
+    samtools view -h -b -f 12 ${merged_bam} > "${params.outputFilePrefix}_unmappedReads_f12.bam"
+    """
+}
+
+process merge_unmappedReads {
+
+    publishDir "${params.outputDir}", mode: 'copy', overwrite: true
+    
+    input:
+    // Collecting in channel, good thread on exactly this use-case:
+    // https://groups.google.com/d/msg/nextflow/jt77_-uApMs/2X_74ireBQAJ
+    file("unmapped_") from extract_ur_unmapped.concat(extract_bru_unmapped).collect()
+
+    output:
+    file "${params.outputFilePrefix}_unmappedRead.bam"
+    file "${params.outputFilePrefix}_unmappedRead.metrics" 
+
+    """
+    bammarkduplicates \
+    I=${unmapped_.join(" I=")} \
+    O=${params.outputFilePrefix}_unmappedRead.bam \
+    M=${params.outputFilePrefix}_unmappedRead.metrics \
+    tmpfile=${params.outputFilePrefix}_unmappedRead.biormdup \
+    markthreads=${params.threads} \
+    rewritebam=1 \
+    rewritebamlevel=1 \
+    index=1 \
+    md5=1
     """
 }

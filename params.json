@@ -1,12 +1,13 @@
 {
+    "outputDir": "out",
     "outputFilePrefix": "processed",
     "threads": 4,
     "sortMemMb": 2048,
-    "reference_gz": "reference/genome.fa.gz",
-    "reference_gz_fai": "reference/genome.fa.gz.fai",
-    "reference_gz_amb": "reference/genome.fa.gz.64.amb",
-    "reference_gz_ann": "reference/genome.fa.gz.64.ann",
-    "reference_gz_bwt": "reference/genome.fa.gz.64.bwt",
-    "reference_gz_pac": "reference/genome.fa.gz.64.pac",
-    "reference_gz_sa": "reference/genome.fa.gz.64.sa"
+    "reference_gz": "./reference/genome.fa.gz",
+    "reference_gz_fai": "./reference/genome.fa.gz.fai",
+    "reference_gz_amb": "./reference/genome.fa.gz.64.amb",
+    "reference_gz_ann": "./reference/genome.fa.gz.64.ann",
+    "reference_gz_bwt": "./reference/genome.fa.gz.64.bwt",
+    "reference_gz_pac": "./reference/genome.fa.gz.64.pac",
+    "reference_gz_sa": "./reference/genome.fa.gz.64.sa"
   }
