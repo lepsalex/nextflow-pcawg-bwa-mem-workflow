@@ -8,7 +8,7 @@
     "cpus_big": 16,
     "threads_big": 32,
     "mem_big": 32000,
-    "minioURI": "http://127.0.0.1:9001",
+    "minioURI": "http://nextflow-minio.nextflow-pcawg.svc.cluster.local:9000",
     "minioAccessKey": "minio",
     "minioSecretKey": "minio123",
     "referenceBucket": "reference",
