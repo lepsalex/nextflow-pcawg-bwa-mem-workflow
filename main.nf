@@ -21,7 +21,7 @@ params.mem_big = 4096
 
 // Get Inputs from Minio or other S3 compatible bucket
 process fetchFiles {
-    container 'minio-mc-bash:latest'
+    container 'lepsalex/minio-mc-bash'
 
     cpus params.cpus
     memory "${params.mem} MB"
@@ -235,7 +235,7 @@ process outputMappedResults {
     cpus params.cpus
     memory "${params.mem} MB"
 
-    container 'minio-mc-bash:latest'
+    container 'lepsalex/minio-mc-bash'
 
     input:
     file output from mappedReadsOutput
@@ -251,7 +251,7 @@ process outputMappedMetricsResults {
     cpus params.cpus
     memory "${params.mem} MB"
 
-    container 'minio-mc-bash:latest'
+    container 'lepsalex/minio-mc-bash'
 
     input:
     file output from mappedReadsMetricsOutput
@@ -267,7 +267,7 @@ process outputUnmappedResults {
     cpus params.cpus
     memory "${params.mem} MB"
 
-    container 'minio-mc-bash:latest'
+    container 'lepsalex/minio-mc-bash'
 
     input:
     file output from unmappedReadsOutput
@@ -283,7 +283,7 @@ process outputUnmappedMetricsResults {
     cpus params.cpus
     memory "${params.mem} MB"
 
-    container 'minio-mc-bash:latest'
+    container 'lepsalex/minio-mc-bash'
 
     input:
     file output from unmappedReadsMetricsOutput
