@@ -6,17 +6,25 @@ params.outputFilePrefix = "example"
 // normal processes
 params.cpus = 1
 params.threads = 2
-params.sortMemMb = 1024
+params.mem = 1024
 
-// large processes (align)
-params.cpus_big = 2
-params.threads_big = 4
-params.sortMemMb_big = 2048
+// bigger processes (align)
+params.cpus_mid = 2
+params.threads_mid = 4
+params.mem_mid = 2048
+
+// largest processes (align)
+params.cpus_big = 4
+params.threads_big = 8
+params.mem_big = 4096
 
 
 // Get Inputs from Minio or other S3 compatible bucket
 process fetchFiles {
     container 'minio-mc-bash:latest'
+
+    cpus params.cpus
+    memory "${params.mem} MB"
 
     output:
     // TODO: should check for existence first via ifEmpty() - see any nf-core example
@@ -45,6 +53,9 @@ process fetchFiles {
 
 process readHeader {
 
+    cpus params.cpus
+    memory "${params.mem} MB"
+
     input:
     file(bam) from bams_rh.flatMap()
 
@@ -60,6 +71,9 @@ process readHeader {
 
 process countReads {
 
+    cpus params.cpus
+    memory "${params.mem} MB"
+
     input:
     file bam from bams_cr.flatMap()
 
@@ -73,6 +87,9 @@ process countReads {
 }
 
 process align {
+
+    cpus params.cpus_big
+    memory "${params.mem_big} MB"
 
     input:
     file reference_gz from reference_gz_ch
@@ -95,11 +112,14 @@ process align {
     """
     bamtofastq exclude=QCFAIL,SECONDARY,SUPPLEMENTARY T=${bamName}.t S=${bamName}.s O=${bamName}.o O2=${bamName}.o2 collate=1 tryoq=1 filename=${bam} | \\
     bwa mem -p -t ${params.threads} -T 0 -R "${headerText.trim()}" ${reference_gz} - | \\
-    bamsort blockmb=${params.sortMemMb} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=${reference_gz} tmpfile=${bamName}.sorttmp O=${bamName}_aligned.bam
+    bamsort blockmb=${params.mem} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=${reference_gz} tmpfile=${bamName}.sorttmp O=${bamName}_aligned.bam
     """
 }
 
 process bam_stats_qc {
+
+    cpus params.cpus
+    memory "${params.mem} MB"
 
     input:
     set val(bamName), file(bam), file(bamHeader), file(readCount) from aligned_bams
@@ -116,6 +136,9 @@ process bam_stats_qc {
 }
 
 process merge_aligned {
+
+    cpus params.cpus_mid
+    memory "${params.mem_mid} MB"
 
     input:
     // Collecting in channel, good thread on exactly this use-case:
@@ -141,6 +164,9 @@ process merge_aligned {
 }
 
 process extract_unaligned_reads {
+    cpus params.cpus
+    memory "${params.mem} MB"
+
     // will create one file for each f value
     extract_flags = [4, 8]
 
@@ -157,11 +183,13 @@ process extract_unaligned_reads {
     """
     samtools view -h -f ${f} ${merged_bam} | \\
     remove_both_ends_unmapped_reads.pl | \\
-    bamsort blockmb=${params.sortMemMb} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=${reference_gz} tmpfile=${params.outputFilePrefix}.sorttmp O=${params.outputFilePrefix}_unmappedReads_f${f}.bam
+    bamsort blockmb=${params.mem} inputformat=sam level=1 outputthreads=2 calmdnm=1 calmdnmrecompindetonly=1 calmdnmreference=${reference_gz} tmpfile=${params.outputFilePrefix}.sorttmp O=${params.outputFilePrefix}_unmappedReads_f${f}.bam
     """
 }
 
 process extract_both_reads_unaligned {
+    cpus params.cpus
+    memory "${params.mem} MB"
 
     input:
     file merged_bam from mb_for_extract_bru
@@ -175,6 +203,9 @@ process extract_both_reads_unaligned {
 }
 
 process merge_unmappedReads {
+
+    cpus params.cpus_mid
+    memory "${params.mem_mid} MB"
     
     input:
     // Collecting in channel, good thread on exactly this use-case:
@@ -200,6 +231,10 @@ process merge_unmappedReads {
 }
 
 process outputMappedResults {
+    
+    cpus params.cpus
+    memory "${params.mem} MB"
+
     container 'minio-mc-bash:latest'
 
     input:
@@ -212,6 +247,10 @@ process outputMappedResults {
 }
 
 process outputMappedMetricsResults {
+    
+    cpus params.cpus
+    memory "${params.mem} MB"
+
     container 'minio-mc-bash:latest'
 
     input:
@@ -224,6 +263,10 @@ process outputMappedMetricsResults {
 }
 
 process outputUnmappedResults {
+    
+    cpus params.cpus
+    memory "${params.mem} MB"
+
     container 'minio-mc-bash:latest'
 
     input:
@@ -236,6 +279,10 @@ process outputUnmappedResults {
 }
 
 process outputUnmappedMetricsResults {
+    
+    cpus params.cpus
+    memory "${params.mem} MB"
+
     container 'minio-mc-bash:latest'
 
     input:
