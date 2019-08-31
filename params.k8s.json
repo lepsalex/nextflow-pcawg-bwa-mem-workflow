@@ -6,7 +6,7 @@
     "minioSecretKey": "minio123",
     "referenceBucket": "reference",
     "inputsBucket": "inputs",
-    "outputBucket": "out",
+    "outputBucket": "output",
     "outputFilePrefix": "hg19.chr22.5.5x",
     "reference_gz": "genome.fa.gz",
     "reference_gz_fai": "genome.fa.gz.fai",

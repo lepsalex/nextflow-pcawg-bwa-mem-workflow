@@ -109,16 +109,14 @@ process bam_stats_qc {
 
 process merge_aligned {
 
-    publishDir "${params.outputDir}", mode: 'copy', overwrite: true
-
     input:
     // Collecting in channel, good thread on exactly this use-case:
     // https://groups.google.com/d/msg/nextflow/jt77_-uApMs/2X_74ireBQAJ
     file("verified_bam_") from verified_bams.collect()
 
     output:
-    file "${params.outputFilePrefix}_aligned.bam" into mb_for_extract_ur, mb_for_extract_bru
-    file "${params.outputFilePrefix}_aligned.metrics" into merged_bam_metrics   
+    file "${params.outputFilePrefix}_aligned.bam" into mb_for_extract_ur, mb_for_extract_bru, mappedReadsOutput
+    file "${params.outputFilePrefix}_aligned.metrics" into merged_bam_metrics, mappedReadsMetricsOutput
 
     """
     bammarkduplicates \
@@ -169,8 +167,6 @@ process extract_both_reads_unaligned {
 }
 
 process merge_unmappedReads {
-
-    publishDir "${params.outputDir}", mode: 'copy', overwrite: true
     
     input:
     // Collecting in channel, good thread on exactly this use-case:
@@ -178,8 +174,8 @@ process merge_unmappedReads {
     file("unmapped_") from extract_ur_unmapped.concat(extract_bru_unmapped).collect()
 
     output:
-    file "${params.outputFilePrefix}_unmappedRead.bam"
-    file "${params.outputFilePrefix}_unmappedRead.metrics" 
+    file "${params.outputFilePrefix}_unmappedRead.bam" into unmappedReadsOutput
+    file "${params.outputFilePrefix}_unmappedRead.metrics" into unmappedReadsMetricsOutput
 
     """
     bammarkduplicates \
@@ -192,5 +188,53 @@ process merge_unmappedReads {
     rewritebamlevel=1 \
     index=1 \
     md5=1
+    """
+}
+
+process outputMappedResults {
+    container 'minio-mc-bash:latest'
+
+    input:
+    file output from mappedReadsOutput
+
+    """
+    mc config host add store ${params.minioURI} ${params.minioAccessKey} ${params.minioSecretKey}
+    mc cp ${output} store/${params.outputBucket}
+    """
+}
+
+process outputMappedMetricsResults {
+    container 'minio-mc-bash:latest'
+
+    input:
+    file output from mappedReadsMetricsOutput
+
+    """
+    mc config host add store ${params.minioURI} ${params.minioAccessKey} ${params.minioSecretKey}
+    mc cp ${output} store/${params.outputBucket}
+    """
+}
+
+process outputUnmappedResults {
+    container 'minio-mc-bash:latest'
+
+    input:
+    file output from unmappedReadsOutput
+
+    """
+    mc config host add store ${params.minioURI} ${params.minioAccessKey} ${params.minioSecretKey}
+    mc cp ${output} store/${params.outputBucket}
+    """
+}
+
+process outputUnmappedMetricsResults {
+    container 'minio-mc-bash:latest'
+
+    input:
+    file output from unmappedReadsMetricsOutput
+
+    """
+    mc config host add store ${params.minioURI} ${params.minioAccessKey} ${params.minioSecretKey}
+    mc cp ${output} store/${params.outputBucket}
     """
 }
