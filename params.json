@@ -1,14 +1,16 @@
 {
-    "outputDir": "out",
-    "outputFilePrefix": "hg19.chr22.5.5x",
-    "inputDir": "input",
-    "threads": 4,
-    "sortMemMb": 2048,
-    "reference_gz": "./reference/genome.fa.gz",
-    "reference_gz_fai": "./reference/genome.fa.gz.fai",
-    "reference_gz_amb": "./reference/genome.fa.gz.64.amb",
-    "reference_gz_ann": "./reference/genome.fa.gz.64.ann",
-    "reference_gz_bwt": "./reference/genome.fa.gz.64.bwt",
-    "reference_gz_pac": "./reference/genome.fa.gz.64.pac",
-    "reference_gz_sa": "./reference/genome.fa.gz.64.sa"
-  }
+  "minioURI": "http://127.0.0.1:9001",
+  "minioAccessKey": "minio",
+  "minioSecretKey": "minio123",
+  "referenceBucket": "reference",
+  "inputsBucket": "inputs",
+  "outputBucket": "out",
+  "outputFilePrefix": "hg19.chr22.5.5x",
+  "reference_gz": "genome.fa.gz",
+  "reference_gz_fai": "genome.fa.gz.fai",
+  "reference_gz_amb": "genome.fa.gz.64.amb",
+  "reference_gz_ann": "genome.fa.gz.64.ann",
+  "reference_gz_bwt": "genome.fa.gz.64.bwt",
+  "reference_gz_pac": "genome.fa.gz.64.pac",
+  "reference_gz_sa": "genome.fa.gz.64.sa"
+}

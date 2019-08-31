@@ -1,14 +1,18 @@
 {
-    "outputDir": "/mnt/volume/nextflow/out",
-    "outputFilePrefix": "hg19.chr22.5.5x",
-    "inputDir": "/mnt/volume/nextflow/input",
     "threads": 4,
     "sortMemMb": 2048,
-    "reference_gz": "/mnt/volume/nextflow/reference/genome.fa.gz",
-    "reference_gz_fai": "/mnt/volume/nextflow/reference/genome.fa.gz.fai",
-    "reference_gz_amb": "/mnt/volume/nextflow/reference/genome.fa.gz.64.amb",
-    "reference_gz_ann": "/mnt/volume/nextflow/reference/genome.fa.gz.64.ann",
-    "reference_gz_bwt": "/mnt/volume/nextflow/reference/genome.fa.gz.64.bwt",
-    "reference_gz_pac": "/mnt/volume/nextflow/reference/genome.fa.gz.64.pac",
-    "reference_gz_sa": "/mnt/volume/nextflow/reference/genome.fa.gz.64.sa"
+    "minioURI": "http://127.0.0.1:9001",
+    "minioAccessKey": "minio",
+    "minioSecretKey": "minio123",
+    "referenceBucket": "reference",
+    "inputsBucket": "inputs",
+    "outputBucket": "out",
+    "outputFilePrefix": "hg19.chr22.5.5x",
+    "reference_gz": "genome.fa.gz",
+    "reference_gz_fai": "genome.fa.gz.fai",
+    "reference_gz_amb": "genome.fa.gz.64.amb",
+    "reference_gz_ann": "genome.fa.gz.64.ann",
+    "reference_gz_bwt": "genome.fa.gz.64.bwt",
+    "reference_gz_pac": "genome.fa.gz.64.pac",
+    "reference_gz_sa": "genome.fa.gz.64.sa"
   }

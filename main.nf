@@ -1,58 +1,66 @@
 #!/usr/bin/env nextflow
 
 // Script parameter defaults
-params.outputDir = "./out"
 params.outputFilePrefix = "example"
-params.inputDir = "./input"
 params.threads = 1
 params.sortMemMb = 1024
 
-// Inputs
 
-// TODO: should check for existence first via ifEmpty() - see any nf-core example
-// ----- Also applicable to the file() syntax below - checkIfExists: true
-// ----- https://github.com/nf-core/chipseq/blob/master/main.nf
-Channel.fromPath("${params.inputDir}/*.bam").into { bams_rh; bams_cr }
+// Get Inputs from Minio or other S3 compatible bucket
+process fetchFiles {
+    container 'minio-mc-bash:latest'
 
-// Nextflow docs are a little conflicting, they say that a single file channel can
-// be reused multiple times but when trying to do it results in an error so for now
-// going to use direct file declaration like this, based on example on nextflow.oi:
-// https://www.nextflow.io/example4.html
-reference_gz_ch = file(params.reference_gz)
-reference_gz_fai_ch = file(params.reference_gz_fai)
-reference_gz_amb_ch = file(params.reference_gz_amb)
-reference_gz_ann_ch = file(params.reference_gz_ann)
-reference_gz_bwt_ch = file(params.reference_gz_bwt)
-reference_gz_pac_ch = file(params.reference_gz_pac)
-reference_gz_sa_ch = file(params.reference_gz_sa)
+    output:
+    // TODO: should check for existence first via ifEmpty() - see any nf-core example
+    // ----- Also applicable to the file() syntax below - checkIfExists: true
+    // ----- https://github.com/nf-core/chipseq/blob/master/main.nf
+    file "${params.inputsBucket}/*.bam" into bams_rh, bams_cr
 
+    // // Nextflow docs are a little conflicting, they say that a single file channel can
+    // // be reused multiple times but when trying to do it results in an error so for now
+    // // going to use direct file declaration like this, based on example on nextflow.oi:
+    // // https://www.nextflow.io/example4.html
+    file "${params.referenceBucket}/${params.reference_gz}" into reference_gz_ch
+    file "${params.referenceBucket}/${params.reference_gz_fai}" into reference_gz_fai_ch
+    file "${params.referenceBucket}/${params.reference_gz_amb}" into reference_gz_amb_ch
+    file "${params.referenceBucket}/${params.reference_gz_ann}" into reference_gz_ann_ch
+    file "${params.referenceBucket}/${params.reference_gz_bwt}" into reference_gz_bwt_ch
+    file "${params.referenceBucket}/${params.reference_gz_pac}" into reference_gz_pac_ch
+    file "${params.referenceBucket}/${params.reference_gz_sa}" into reference_gz_sa_ch
+
+    """
+    mc config host add store ${params.minioURI} ${params.minioAccessKey} ${params.minioSecretKey}
+    mc cp -r store/${params.referenceBucket} .
+    mc cp -r store/${params.inputsBucket} .
+    """
+}
 
 process readHeader {
 
     input:
-    file bam from bams_rh
+    file(bam) from bams_rh.flatMap()
 
     output:
-    set val("${bam.getBaseName()}"), file(bam), file("${bam.getBaseName()}_header.txt") into headers
+    set val("${bam.baseName}"), file(bam), file("${bam.baseName}_header.txt") into headers
 
     """
     samtools view -H ${bam} | \\
     perl -nae 'next unless /^\\@RG/; s/\\tPI:\\t/\\t/; s/\\tPI:\\s*\\t/\\t/; s/\\tPI:\\s*\\z/\\n/; s/\\t/\\\\t/g; print' > \\
-    ${bam.getBaseName()}_header.txt
+    ${bam.baseName}_header.txt
     """
 }
 
 process countReads {
 
     input:
-    file bam from bams_cr
+    file bam from bams_cr.flatMap()
 
     output:
-    set val("${bam.getBaseName()}"), file("${bam.getBaseName()}_read_count.txt") into counts
+    set val("${bam.baseName}"), file("${bam.baseName}_read_count.txt") into counts
 
     """
     samtools view ${bam} | \\
-    wc -l > ${bam.getBaseName()}_read_count.txt
+    wc -l > ${bam.baseName}_read_count.txt
     """
 }
 

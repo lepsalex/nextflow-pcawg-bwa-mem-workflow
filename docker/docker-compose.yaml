@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+ minio:
+  image: minio/minio:RELEASE.2019-07-31T18-57-56Z
+  volumes:
+   - data:/data
+  ports:
+   - "9001:9000"
+  environment:
+   MINIO_ACCESS_KEY: minio
+   MINIO_SECRET_KEY: minio123
+  command: server /data/minio
+ 
+## By default this config uses default local driver,
+## For custom volumes replace with volume driver configuration.
+volumes:
+  data:
