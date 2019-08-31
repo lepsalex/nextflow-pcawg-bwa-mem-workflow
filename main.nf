@@ -2,8 +2,16 @@
 
 // Script parameter defaults
 params.outputFilePrefix = "example"
-params.threads = 1
+
+// normal processes
+params.cpus = 1
+params.threads = 2
 params.sortMemMb = 1024
+
+// large processes (align)
+params.cpus_big = 2
+params.threads_big = 4
+params.sortMemMb_big = 2048
 
 
 // Get Inputs from Minio or other S3 compatible bucket

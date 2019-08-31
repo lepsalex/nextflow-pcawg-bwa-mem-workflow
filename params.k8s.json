@@ -1,6 +1,10 @@
 {
+    "cpus": 2,
     "threads": 4,
-    "sortMemMb": 2048,
+    "sortMemMb": 4000,
+    "cpus_big": 16,
+    "threads_big": 32,
+    "sortMemMb_big": 32000,
     "minioURI": "http://127.0.0.1:9001",
     "minioAccessKey": "minio",
     "minioSecretKey": "minio123",
