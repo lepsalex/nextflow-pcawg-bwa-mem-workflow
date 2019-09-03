@@ -1,0 +1,7 @@
+ingress:
+  enabled: true
+  annotations: {}
+  path: /
+  hosts:
+    - nf-kibana.light.overture.bio
+  tls: []

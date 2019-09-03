@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: minio
+  namespace: nextflow-pcawg
+spec:
+  rules:
+  - host: minio.light.overture.bio
+    http:
+      paths:
+      - backend:
+          serviceName: nextflow-minio
+          servicePort: 9000
+        path: /
