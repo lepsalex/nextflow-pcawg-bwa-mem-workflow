@@ -8,7 +8,7 @@
     "cpus_big": 16,
     "threads_big": 32,
     "mem_big": 16000,
-    "minioURI": "http://10.233.37.49:9000",
+    "minioURI": "http://nextflow-minio:9000",
     "minioAccessKey": "minio",
     "minioSecretKey": "minio123",
     "referenceBucket": "reference",
