@@ -23,6 +23,8 @@ params.mem_big = 4096
 process fetchFiles {
     container 'lepsalex/minio-mc-bash'
 
+    tag "$params.inputsBucket"
+
     cpus params.cpus
     memory "${params.mem} MB"
 
@@ -53,6 +55,8 @@ process fetchFiles {
 
 process readHeader {
 
+    tag "$bam.baseName"
+
     cpus params.cpus
     memory "${params.mem} MB"
 
@@ -71,6 +75,8 @@ process readHeader {
 
 process countReads {
 
+    tag "$bam.baseName"
+
     cpus params.cpus
     memory "${params.mem} MB"
 
@@ -87,6 +93,8 @@ process countReads {
 }
 
 process align {
+
+    tag "$bamName"
 
     cpus params.cpus_big
     memory "${params.mem_big} MB"
@@ -118,6 +126,8 @@ process align {
 
 process bam_stats_qc {
 
+    tag "$bamName"
+
     cpus params.cpus
     memory "${params.mem} MB"
 
@@ -136,6 +146,8 @@ process bam_stats_qc {
 }
 
 process merge_aligned {
+
+    tag "$verified_bam_"
 
     cpus params.cpus_mid
     memory "${params.mem_mid} MB"
@@ -164,6 +176,9 @@ process merge_aligned {
 }
 
 process extract_unaligned_reads {
+
+    tag "$merged_bam - $f"
+
     cpus params.cpus
     memory "${params.mem} MB"
 
@@ -188,6 +203,9 @@ process extract_unaligned_reads {
 }
 
 process extract_both_reads_unaligned {
+
+    tag "$merged_bam"
+
     cpus params.cpus
     memory "${params.mem} MB"
 
@@ -203,6 +221,8 @@ process extract_both_reads_unaligned {
 }
 
 process merge_unmappedReads {
+
+    tag "$unmapped_"
 
     cpus params.cpus_mid
     memory "${params.mem_mid} MB"
@@ -231,6 +251,8 @@ process merge_unmappedReads {
 }
 
 process outputMappedResults {
+
+    tag "$output"
     
     cpus params.cpus
     memory "${params.mem} MB"
@@ -247,6 +269,8 @@ process outputMappedResults {
 }
 
 process outputMappedMetricsResults {
+
+    tag "$output"
     
     cpus params.cpus
     memory "${params.mem} MB"
@@ -263,6 +287,8 @@ process outputMappedMetricsResults {
 }
 
 process outputUnmappedResults {
+
+    tag "$output"
     
     cpus params.cpus
     memory "${params.mem} MB"
@@ -279,6 +305,8 @@ process outputUnmappedResults {
 }
 
 process outputUnmappedMetricsResults {
+
+    tag "$output"
     
     cpus params.cpus
     memory "${params.mem} MB"
