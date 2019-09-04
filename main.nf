@@ -252,7 +252,8 @@ process merge_unmappedReads {
 
 process outputMappedResults {
 
-    tag "$output"
+    // max length restriction
+    tag "${output.take(63)}"
     
     cpus params.cpus
     memory "${params.mem} MB"
@@ -270,7 +271,8 @@ process outputMappedResults {
 
 process outputMappedMetricsResults {
 
-    tag "$output"
+    // max length restriction
+    tag "${output.take(63)}"
     
     cpus params.cpus
     memory "${params.mem} MB"
@@ -288,7 +290,8 @@ process outputMappedMetricsResults {
 
 process outputUnmappedResults {
 
-    tag "$output"
+    // max length restriction
+    tag "${output.take(63)}"
     
     cpus params.cpus
     memory "${params.mem} MB"
@@ -306,7 +309,8 @@ process outputUnmappedResults {
 
 process outputUnmappedMetricsResults {
 
-    tag "$output"
+    // max length restriction
+    tag "${output.take(63)}"
     
     cpus params.cpus
     memory "${params.mem} MB"
