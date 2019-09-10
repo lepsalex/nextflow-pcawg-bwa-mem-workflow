@@ -18,6 +18,18 @@ params.cpus_big = 4
 params.threads_big = 8
 params.mem_big = 4096
 
+// // Nextflow docs are a little conflicting, they say that a single file channel can
+// // be reused multiple times but when trying to do it results in an error so for now
+// // going to use direct file declaration like this, based on example on nextflow.oi:
+// // https://www.nextflow.io/example4.html
+reference_gz_ch = file("${params.referencePath}/${params.reference_gz}")
+reference_gz_fai_ch = file("${params.referencePath}/${params.reference_gz_fai}")
+reference_gz_amb_ch = file("${params.referencePath}/${params.reference_gz_amb}")
+reference_gz_ann_ch = file("${params.referencePath}/${params.reference_gz_ann}")
+reference_gz_bwt_ch = file("${params.referencePath}/${params.reference_gz_bwt}")
+reference_gz_pac_ch = file("${params.referencePath}/${params.reference_gz_pac}")
+reference_gz_sa_ch = file("${params.referencePath}/${params.reference_gz_sa}")
+
 
 // Get Inputs from Minio or other S3 compatible bucket
 process fetchFiles {
@@ -34,21 +46,8 @@ process fetchFiles {
     // ----- https://github.com/nf-core/chipseq/blob/master/main.nf
     file "${params.inputsBucket}/*.bam" into bams_rh, bams_cr
 
-    // // Nextflow docs are a little conflicting, they say that a single file channel can
-    // // be reused multiple times but when trying to do it results in an error so for now
-    // // going to use direct file declaration like this, based on example on nextflow.oi:
-    // // https://www.nextflow.io/example4.html
-    file "${params.referenceBucket}/${params.reference_gz}" into reference_gz_ch
-    file "${params.referenceBucket}/${params.reference_gz_fai}" into reference_gz_fai_ch
-    file "${params.referenceBucket}/${params.reference_gz_amb}" into reference_gz_amb_ch
-    file "${params.referenceBucket}/${params.reference_gz_ann}" into reference_gz_ann_ch
-    file "${params.referenceBucket}/${params.reference_gz_bwt}" into reference_gz_bwt_ch
-    file "${params.referenceBucket}/${params.reference_gz_pac}" into reference_gz_pac_ch
-    file "${params.referenceBucket}/${params.reference_gz_sa}" into reference_gz_sa_ch
-
     """
     mc config host add store ${params.minioURI} ${params.minioAccessKey} ${params.minioSecretKey}
-    mc cp -r store/${params.referenceBucket} .
     mc cp -r store/${params.inputsBucket} .
     """
 }

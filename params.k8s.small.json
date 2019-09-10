@@ -11,7 +11,7 @@
     "minioURI": "http://nextflow-minio:9000",
     "minioAccessKey": "minio",
     "minioSecretKey": "minio123",
-    "referenceBucket": "reference",
+    "referencePath": "/mnt/volume/nextflow/reference",
     "inputsBucket": "inputs",
     "outputBucket": "outputs",
     "outputFilePrefix": "hg19.chr22.5.5x",
